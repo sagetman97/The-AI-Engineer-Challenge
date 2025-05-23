@@ -18,7 +18,9 @@ app = FastAPI(title="OpenAI Chat API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://bootcamp-todo-list-kug2ahyjf-sebastians-projects-61a584b3.vercel.app",
+        "https://bootcamp-todo-list.vercel.app",
+        "https://bootcamp-todo-list-sebastians-projects-61a584b3.vercel.app",
+        "https://bootcamp-todo-list-sagetman97-sebastians-projects-61a584b3.vercel.app",
         "http://localhost:3000"
     ],
     allow_credentials=True,  # Allows cookies to be included in requests
