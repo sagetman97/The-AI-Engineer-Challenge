@@ -26,17 +26,18 @@ app.add_middleware(
 # Define the data model for chat requests using Pydantic
 # This ensures incoming request data is properly validated
 class ChatRequest(BaseModel):
-    developer_message: str  # Message from the developer/system
-    user_message: str      # Message from the user
-    model: Optional[str] = "gpt-4.1-mini"  # Optional model selection with default
-    api_key: str          # OpenAI API key for authentication
+    developer_message: str
+    user_message: str
+    model: Optional[str] = "gpt-4.1-mini"
 
 # Define the main chat endpoint that handles POST requests
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     try:
-        # Initialize OpenAI client with the provided API key
-        client = OpenAI(api_key=request.api_key)
+        OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OpenAI API key not set in environment variables.")
+        client = OpenAI(api_key=OPENAI_API_KEY)
         
         # Create an async generator function for streaming responses
         async def generate():

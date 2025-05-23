@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Todo } from '@/types/todo';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const beep = () => {
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   const o = ctx.createOscillator();
@@ -33,7 +35,7 @@ export default function Home() {
 
   const fetchTodos = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/todos');
+      const response = await axios.get(`${API_BASE_URL}/api/todos`);
       setTodos(response.data);
     } catch (error) {
       console.error('Error fetching todos:', error);
@@ -45,7 +47,7 @@ export default function Home() {
     if (!newTodo.trim()) return;
 
     try {
-      const response = await axios.post('http://localhost:8000/api/todos', null, {
+      const response = await axios.post(`${API_BASE_URL}/api/todos`, null, {
         params: { title: newTodo }
       });
       setTodos([...todos, response.data]);
@@ -57,7 +59,7 @@ export default function Home() {
 
   const toggleTodo = async (todo: Todo) => {
     try {
-      const response = await axios.put(`http://localhost:8000/api/todos/${todo.id}`, null, {
+      const response = await axios.put(`${API_BASE_URL}/api/todos/${todo.id}`, null, {
         params: { completed: !todo.completed }
       });
       setTodos(todos.map(t => t.id === todo.id ? response.data : t));
@@ -68,7 +70,7 @@ export default function Home() {
 
   const deleteTodo = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:8000/api/todos/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/todos/${id}`);
       setTodos(todos.filter(todo => todo.id !== id));
     } catch (error) {
       console.error('Error deleting todo:', error);
@@ -90,7 +92,7 @@ export default function Home() {
   const saveEdit = async (todo: Todo) => {
     if (!editingText.trim()) return;
     try {
-      await axios.put(`http://localhost:8000/api/todos/${todo.id}`, null, {
+      await axios.put(`${API_BASE_URL}/api/todos/${todo.id}`, null, {
         params: { completed: todo.completed, title: editingText }
       });
       setTodos(todos.map(t => t.id === todo.id ? { ...t, title: editingText } : t));
