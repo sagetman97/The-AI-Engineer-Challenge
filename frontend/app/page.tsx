@@ -6,6 +6,8 @@ import { Todo } from '@/types/todo';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+console.log('API_BASE_URL:', API_BASE_URL);
+
 const beep = () => {
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   const o = ctx.createOscillator();
