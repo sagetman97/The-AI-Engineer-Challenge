@@ -130,16 +130,93 @@ Here's a template to get your post started!
 ```
 🚀🎉 Exciting News! 🎉🚀
 
-🏗️ Today, I'm thrilled to announce that I've successfully built and shipped my first-ever LLM using the powerful combination of , and the OpenAI API! 🖥️
+🏗️ Today, I'm thrilled to announce that I've successfully built and shipped my first-ever LLM using the powerful combination of , and the OpenAI API! 🖥️
 
 Check it out 👇
 [LINK TO APP]
 
 A big shoutout to the @AI Makerspace for all making this possible. Couldn't have done it without the incredible community there. 🤗🙏
 
-Looking forward to building with the community! 🙌✨ Here's to many more creations ahead! 🥂🎉
+Looking forward to building with the community! 🙌✨ Here's to many more creations ahead! 🥂🎉
 
 Who else is diving into the world of AI? Let's connect! 🌐💡
 
 #FirstLLMApp 
 ```
+
+# Retro Neon Todo App
+
+A full-stack todo application with a retro neon theme, built with Next.js and FastAPI.
+
+## Project Structure
+
+```
+.
+├── api/               # FastAPI backend
+│   ├── app.py        # Main FastAPI application
+│   └── requirements.txt
+└── frontend/         # Next.js frontend
+    ├── app/         
+    ├── types/
+    └── package.json
+```
+
+## Setup and Running
+
+### Backend (FastAPI)
+
+1. Create a Python virtual environment:
+```bash
+cd api
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the backend server:
+```bash
+uvicorn app:app --reload --port 8000
+```
+
+The API will be available at http://localhost:8000
+
+### Frontend (Next.js)
+
+1. Install dependencies:
+```bash
+cd frontend
+npm install
+```
+
+2. Run the development server:
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:3000
+
+## Features
+
+- Create, read, update, and delete todos
+- Mark todos as complete/incomplete
+- Retro neon theme with modern UI/UX
+- Responsive design
+- Real-time updates
+
+## Tech Stack
+
+- Frontend:
+  - Next.js 14
+  - React 18
+  - TypeScript
+  - Tailwind CSS
+  - Axios
+
+- Backend:
+  - FastAPI
+  - Pydantic
+  - uvicorn

@@ -7,7 +7,8 @@ from pydantic import BaseModel
 # Import OpenAI client for interacting with OpenAI's API
 from openai import OpenAI
 import os
-from typing import Optional
+from typing import Optional, List
+import uuid
 
 # Initialize FastAPI application with a title
 app = FastAPI(title="OpenAI Chat API")
@@ -16,7 +17,7 @@ app = FastAPI(title="OpenAI Chat API")
 # This allows the API to be accessed from different domains/origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows requests from any origin
+    allow_origins=["http://localhost:3000"],  # Next.js frontend URL
     allow_credentials=True,  # Allows cookies to be included in requests
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers in requests
@@ -65,6 +66,40 @@ async def chat(request: ChatRequest):
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+class Todo(BaseModel):
+    id: str
+    title: str
+    completed: bool
+
+# In-memory storage
+todos: List[Todo] = []
+
+@app.get("/api/todos", response_model=List[Todo])
+async def get_todos():
+    return todos
+
+@app.post("/api/todos", response_model=Todo)
+async def create_todo(title: str):
+    todo = Todo(id=str(uuid.uuid4()), title=title, completed=False)
+    todos.append(todo)
+    return todo
+
+@app.put("/api/todos/{todo_id}", response_model=Todo)
+async def update_todo(todo_id: str, completed: bool):
+    for todo in todos:
+        if todo.id == todo_id:
+            todo.completed = completed
+            return todo
+    raise HTTPException(status_code=404, detail="Todo not found")
+
+@app.delete("/api/todos/{todo_id}")
+async def delete_todo(todo_id: str):
+    for i, todo in enumerate(todos):
+        if todo.id == todo_id:
+            todos.pop(i)
+            return {"message": "Todo deleted"}
+    raise HTTPException(status_code=404, detail="Todo not found")
 
 # Entry point for running the application directly
 if __name__ == "__main__":

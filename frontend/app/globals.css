@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body.animated-bg {
+  background: linear-gradient(120deg, #0a0a0a 0%, #1a0033 100%);
+  background-size: 200% 200%;
+  animation: gradient-move 8s ease-in-out infinite;
+}
+
+@keyframes gradient-move {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(120deg, #ff00ff, #00ffff);
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+}
+
+@layer components {
+  .neon-button {
+    @apply px-4 py-2 rounded-md bg-transparent border-2 border-neon-pink text-neon-pink 
+    shadow-neon transition-all duration-300 hover:bg-neon-pink hover:text-dark 
+    focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-opacity-50;
+  }
+
+  .neon-input {
+    @apply w-full px-4 py-2 bg-dark border-2 border-neon-blue text-white rounded-md
+    shadow-neon-blue focus:outline-none focus:ring-4 focus:ring-neon-blue focus:ring-opacity-80
+    placeholder:text-gray-500 transition-all duration-300;
+  }
+
+  .neon-checkbox {
+    @apply w-5 h-5 border-2 border-neon-purple rounded-md bg-dark 
+    checked:bg-neon-purple checked:border-neon-purple focus:ring-2 
+    focus:ring-neon-purple focus:ring-opacity-50;
+  }
+
+  .todo-item {
+    @apply flex items-center gap-4 p-4 border-2 border-neon-blue rounded-lg
+    bg-dark/50 backdrop-blur-sm transition-all duration-300
+    hover:border-neon-pink hover:shadow-neon animate-todo-fadein;
+  }
+
+  .neon-divider {
+    @apply w-full h-1 my-6 bg-gradient-to-r from-neon-pink via-neon-blue to-neon-purple rounded-full shadow-neon;
+  }
+}
+
+@keyframes todo-fadein {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-todo-fadein {
+  animation: todo-fadein 0.5s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+body { background: #0a0a0a !important; } 
