@@ -47,9 +47,7 @@ export default function Home() {
     if (!newTodo.trim()) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/todos`, null, {
-        params: { title: newTodo }
-      });
+      const response = await axios.post(`${API_BASE_URL}/api/todos`, { title: newTodo });
       setTodos([...todos, response.data]);
       setNewTodo('');
     } catch (error) {

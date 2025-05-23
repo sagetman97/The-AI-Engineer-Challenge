@@ -17,7 +17,10 @@ app = FastAPI(title="OpenAI Chat API")
 # This allows the API to be accessed from different domains/origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js frontend URL
+    allow_origins=[
+        "https://bootcamp-todo-list-kug2ahyjf-sebastians-projects-61a584b3.vercel.app",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,  # Allows cookies to be included in requests
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers in requests
@@ -73,6 +76,9 @@ class Todo(BaseModel):
     title: str
     completed: bool
 
+class TodoCreate(BaseModel):
+    title: str
+
 # In-memory storage
 todos: List[Todo] = []
 
@@ -81,10 +87,10 @@ async def get_todos():
     return todos
 
 @app.post("/api/todos", response_model=Todo)
-async def create_todo(title: str):
-    todo = Todo(id=str(uuid.uuid4()), title=title, completed=False)
-    todos.append(todo)
-    return todo
+async def create_todo(todo: TodoCreate):
+    new_todo = Todo(id=str(uuid.uuid4()), title=todo.title, completed=False)
+    todos.append(new_todo)
+    return new_todo
 
 @app.put("/api/todos/{todo_id}", response_model=Todo)
 async def update_todo(todo_id: str, completed: bool):
