@@ -30,11 +30,8 @@ app.add_middleware(
 )
 
 # Define the data model for chat requests using Pydantic
-# This ensures incoming request data is properly validated
 class ChatRequest(BaseModel):
-    developer_message: str
-    user_message: str
-    model: Optional[str] = "gpt-4.1-mini"
+    message: str
 
 # Define the main chat endpoint that handles POST requests
 @app.post("/api/chat")
@@ -45,25 +42,17 @@ async def chat(request: ChatRequest):
             raise HTTPException(status_code=500, detail="OpenAI API key not set in environment variables.")
         client = OpenAI(api_key=OPENAI_API_KEY)
         
-        # Create an async generator function for streaming responses
-        async def generate():
-            # Create a streaming chat completion request
-            stream = client.chat.completions.create(
-                model=request.model,
-                messages=[
-                    {"role": "developer", "content": request.developer_message},
-                    {"role": "user", "content": request.user_message}
-                ],
-                stream=True  # Enable streaming response
-            )
-            
-            # Yield each chunk of the response as it becomes available
-            for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    yield chunk.choices[0].delta.content
-
-        # Return a streaming response to the client
-        return StreamingResponse(generate(), media_type="text/plain")
+        # Create a chat completion request
+        response = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful AI assistant with a retro neon aesthetic. Keep your responses concise and engaging."},
+                {"role": "user", "content": request.message}
+            ]
+        )
+        
+        # Return the response
+        return {"response": response.choices[0].message.content}
     
     except Exception as e:
         # Handle any errors that occur during processing
