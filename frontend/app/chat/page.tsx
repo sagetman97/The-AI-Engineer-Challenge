@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import type { ReactNode } from 'react';
+import React from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -195,7 +198,46 @@ export default function Chat() {
                           : 'bg-neon-blue text-dark shadow-neon-blue'
                       }`}
                     >
-                      {message.content}
+                      {message.role === 'assistant' ? (
+                        React.createElement(
+                          ReactMarkdown as any,
+                          {
+                            components: {
+                              code({node, inline, className, children, ...props}: any) {
+                                return !inline ? (
+                                  <pre className="bg-dark text-neon-blue p-2 rounded-md overflow-x-auto my-2"><code {...props}>{children}</code></pre>
+                                ) : (
+                                  <code className="bg-dark text-neon-pink px-1 rounded" {...props}>{children}</code>
+                                );
+                              },
+                              strong({children, ...props}: any) {
+                                return <strong className="font-bold text-neon-pink" {...props}>{children}</strong>;
+                              },
+                              em({children, ...props}: any) {
+                                return <em className="italic text-neon-blue" {...props}>{children}</em>;
+                              },
+                              ul({children, ...props}: any) {
+                                return <ul className="list-disc ml-6 my-2" {...props}>{children}</ul>;
+                              },
+                              ol({children, ...props}: any) {
+                                return <ol className="list-decimal ml-6 my-2" {...props}>{children}</ol>;
+                              },
+                              li({children, ...props}: any) {
+                                return <li className="mb-1" {...props}>{children}</li>;
+                              },
+                              p({children, ...props}: any) {
+                                return <p className="mb-2" {...props}>{children}</p>;
+                              },
+                              a({href, children, ...props}: any) {
+                                return <a href={href} className="underline text-neon-pink hover:text-neon-blue" target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+                              },
+                            }
+                          },
+                          message.content
+                        )
+                      ) : (
+                        message.content
+                      )}
                       {message.role === 'user' && message.status && (
                         <span className="absolute bottom-1 right-2 text-xs opacity-50">
                           {getStatusIcon(message.status)}
