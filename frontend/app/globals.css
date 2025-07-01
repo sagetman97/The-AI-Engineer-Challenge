@@ -60,4 +60,13 @@ body.animated-bg {
   animation: todo-fadein 0.5s cubic-bezier(0.4,0,0.2,1) both;
 }
 
-body { background: #0a0a0a !important; } 
+body { background: #0a0a0a !important; }
+
+/* Override PrismJS blue token color for better readability */
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.keyword,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.function,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.class-name,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.builtin,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.selector {
+  color: #fff !important;
+} 
