@@ -5,6 +5,8 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import type { ReactNode } from 'react';
 import React from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -50,6 +52,7 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,6 +61,15 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-grow textarea height
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const maxHeight = 6 * 24; // 6 lines * 24px line-height
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + 'px';
+    }
+  }, [input]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,8 +216,24 @@ export default function Chat() {
                           {
                             components: {
                               code({node, inline, className, children, ...props}: any) {
+                                const match = /language-(\w+)/.exec(className || '');
                                 return !inline ? (
-                                  <pre className="bg-dark text-neon-blue p-2 rounded-md overflow-x-auto my-2"><code {...props}>{children}</code></pre>
+                                  <SyntaxHighlighter
+                                    style={vscDarkPlus}
+                                    language={match ? match[1] : undefined}
+                                    PreTag="div"
+                                    customStyle={{
+                                      borderRadius: '0.5rem',
+                                      margin: '0.5rem 0',
+                                      fontSize: '1em',
+                                      lineHeight: '1.6',
+                                      background: '#18181b',
+                                      padding: '1em',
+                                    }}
+                                    wrapLongLines={true}
+                                  >
+                                    {String(children).replace(/\n$/, '')}
+                                  </SyntaxHighlighter>
                                 ) : (
                                   <code className="bg-dark text-neon-pink px-1 rounded" {...props}>{children}</code>
                                 );
@@ -313,15 +341,16 @@ export default function Chat() {
 
       <form onSubmit={handleSubmit} className="w-full max-w-2xl">
         <div className="flex gap-4">
-          <input
-            ref={inputRef}
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
-            className="neon-input flex-grow font-orbitron"
+            className="neon-input flex-grow font-orbitron resize-none min-h-[40px] max-h-[144px] overflow-y-auto"
             disabled={isLoading}
+            rows={1}
+            style={{ lineHeight: '24px' }}
           />
           <button
             type="submit"
