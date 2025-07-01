@@ -22,6 +22,8 @@ app.add_middleware(
         "https://bootcamp-todo-list-sebastians-projects-61a584b3.vercel.app",
         "https://bootcamp-todo-list-sagetman97-sebastians-projects-61a584b3.vercel.app",
         "https://bootcamp-todo-list-5y30v20h9-sebastians-projects-61a584b3.vercel.app",
+        "https://the-ai-engineer-challenge-nine.vercel.app",
+        "https://the-ai-engineer-challenge-sebastians-projects-61a584b3.vercel.app",
         "http://localhost:3000"
     ],
     allow_credentials=True,  # Allows cookies to be included in requests
