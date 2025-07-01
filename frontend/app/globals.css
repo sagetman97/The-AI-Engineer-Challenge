@@ -62,11 +62,16 @@ body.animated-bg {
 
 body { background: #0a0a0a !important; }
 
-/* Override PrismJS blue token color for better readability */
+/* Override PrismJS blue token color to neon purple for better readability and consistency */
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.keyword,
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.function,
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.class-name,
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.builtin,
-:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.selector {
-  color: #fff !important;
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.selector,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.constant,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.tag,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.attr-name,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.property,
+:where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.number {
+  color: #b026ff !important;
 } 
