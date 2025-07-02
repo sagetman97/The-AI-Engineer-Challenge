@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import PDFUpload from '../components/PDFUpload';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -49,10 +50,11 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [hasPDF, setHasPDF] = useState(false);
+  const [ragEnabled, setRagEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,6 +72,15 @@ export default function Chat() {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + 'px';
     }
   }, [input]);
+
+  const handlePDFUploaded = (hasPDF: boolean) => {
+    setHasPDF(hasPDF);
+    if (!hasPDF) setRagEnabled(false);
+  };
+
+  const handleRAGToggle = (rag: boolean) => {
+    setRagEnabled(rag);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +100,8 @@ export default function Chat() {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/chat`, {
-        message: input
+        message: input,
+        use_rag: ragEnabled && hasPDF
       });
       
       // Update user message status
@@ -107,7 +119,6 @@ export default function Chat() {
       setMessages(prev => [...prev, assistantMessage]);
       beep();
     } catch (error) {
-      console.error('Error sending message:', error);
       setMessages(prev => prev.map(msg => 
         msg === userMessage ? { ...msg, status: 'error' } : msg
       ));
@@ -165,7 +176,7 @@ export default function Chat() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-[80vh] container mx-auto px-4 py-8 max-w-2xl">
+    <main className="flex flex-col items-center justify-center min-h-[80vh] container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-4">
           <span className="block w-12 h-12 rounded-full bg-gradient-to-br from-neon-pink to-neon-blue shadow-neon animate-neon-pulse flex items-center justify-center">
@@ -178,11 +189,16 @@ export default function Chat() {
         </div>
       </div>
 
-      <div className="w-full max-w-2xl bg-dark border-2 border-neon-pink rounded-lg shadow-neon p-4 mb-4 h-[60vh] overflow-y-auto">
+      <div className="w-full max-w-2xl bg-dark border-2 border-neon-pink rounded-lg shadow-neon p-4 mb-4 h-[50vh] overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-neon-blue">
             <span className="text-6xl animate-neon-pulse">💭</span>
             <p className="text-xl font-orbitron">Start a conversation!</p>
+            {hasPDF && (
+              <p className="text-sm text-gray-400 mt-2">
+                Attach a PDF and toggle RAG to chat with your document
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -339,14 +355,21 @@ export default function Chat() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-        <div className="flex gap-4">
+      {/* Chat input area with PDF upload icon and RAG toggle */}
+      <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-2">
+        <div className="flex gap-2 items-end">
+          <PDFUpload
+            onPDFUploaded={handlePDFUploaded}
+            onRAGToggle={handleRAGToggle}
+            hasPDF={hasPDF}
+            ragEnabled={ragEnabled}
+          />
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder={hasPDF ? "Ask about your PDF or chat normally..." : "Type your message..."}
             className="neon-input flex-grow font-orbitron resize-none min-h-[40px] max-h-[144px] overflow-y-auto"
             disabled={isLoading}
             rows={1}
