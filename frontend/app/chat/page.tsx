@@ -8,6 +8,8 @@ import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import FileUpload from '../components/PDFUpload';
+import FileManager from '../components/FileManager';
+import { UploadedFile } from '../components/PDFUpload';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -16,6 +18,7 @@ interface Message {
   content: string;
   timestamp: Date;
   status?: 'sending' | 'sent' | 'delivered' | 'error';
+  reactions?: { emoji: string; count: number }[];
 }
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '👏'];
@@ -50,6 +53,7 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const [hasFiles, setHasFiles] = useState(false);
   const [ragEnabled, setRagEnabled] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
@@ -72,9 +76,24 @@ export default function Chat() {
     }
   }, [input]);
 
-  const handleFilesUploaded = (hasFiles: boolean) => {
+  const handleFilesUploaded = (hasFiles: boolean, files: UploadedFile[]) => {
     setHasFiles(hasFiles);
+    setUploadedFiles(files);
     if (!hasFiles) setRagEnabled(false);
+  };
+
+  const handleFilesChange = (files: UploadedFile[]) => {
+    setUploadedFiles(files);
+    setHasFiles(files.length > 0);
+    if (files.length === 0) {
+      setRagEnabled(false);
+    }
+  };
+
+  const handleClearAll = () => {
+    setUploadedFiles([]);
+    setHasFiles(false);
+    setRagEnabled(false);
   };
 
   const handleRAGToggle = (rag: boolean) => {
@@ -322,6 +341,13 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* File Manager - appears below chat when files are uploaded */}
+      <FileManager
+        files={uploadedFiles}
+        onFilesChange={handleFilesChange}
+        onClearAll={handleClearAll}
+      />
 
       {/* Reaction Picker Modal */}
       {showReactionPicker !== null && (

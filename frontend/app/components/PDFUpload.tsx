@@ -2,27 +2,27 @@
 
 import { useRef, useState } from 'react';
 import axios from 'axios';
-import { FaFileUpload, FaCheckCircle, FaExclamationCircle, FaTimes } from 'react-icons/fa';
+import { FaFileUpload, FaExclamationCircle } from 'react-icons/fa';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface FileUploadProps {
-  onFilesUploaded: (hasFiles: boolean) => void;
+  onFilesUploaded: (hasFiles: boolean, files: UploadedFile[]) => void;
   onRAGToggle: (rag: boolean) => void;
   hasFiles: boolean;
   ragEnabled: boolean;
 }
 
-interface UploadedFile {
+export interface UploadedFile {
   name: string;
   status: 'uploading' | 'success' | 'error';
   errorMsg?: string;
+  includedInRAG?: boolean;
 }
 
 export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, ragEnabled }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error' | 'uploading'>('idle');
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleIconClick = () => {
@@ -52,9 +52,9 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
     // Initialize files with uploading status
     const initialFiles: UploadedFile[] = files.map(file => ({
       name: file.name,
-      status: 'uploading'
+      status: 'uploading',
+      includedInRAG: true // Default to included
     }));
-    setUploadedFiles(initialFiles);
 
     try {
       const formData = new FormData();
@@ -70,46 +70,26 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
       setErrorMsg(null);
       
       // Update files with success status
-      setUploadedFiles(files.map(file => ({
+      const successFiles: UploadedFile[] = files.map(file => ({
         name: file.name,
-        status: 'success'
-      })));
+        status: 'success',
+        includedInRAG: true
+      }));
 
-      onFilesUploaded(true);
+      onFilesUploaded(true, successFiles);
     } catch (error: any) {
       setUploadStatus('error');
       setErrorMsg(error.response?.data?.detail || 'Upload failed');
       
       // Update files with error status
-      setUploadedFiles(files.map(file => ({
+      const errorFiles: UploadedFile[] = files.map(file => ({
         name: file.name,
         status: 'error',
-        errorMsg: error.response?.data?.detail || 'Upload failed'
-      })));
+        errorMsg: error.response?.data?.detail || 'Upload failed',
+        includedInRAG: false
+      }));
 
-      onFilesUploaded(false);
-    }
-  };
-
-  const handleClearFiles = async () => {
-    try {
-      await axios.delete(`${API_BASE_URL}/api/clear-files`);
-      setUploadStatus('idle');
-      setUploadedFiles([]);
-      setErrorMsg(null);
-      onFilesUploaded(false);
-      onRAGToggle(false);
-    } catch (error) {
-      setUploadStatus('error');
-      setErrorMsg('Failed to clear files');
-    }
-  };
-
-  const removeFile = (fileName: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.name !== fileName));
-    if (uploadedFiles.length <= 1) {
-      onFilesUploaded(false);
-      onRAGToggle(false);
+      onFilesUploaded(false, errorFiles);
     }
   };
 
@@ -133,57 +113,12 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
         className="hidden"
       />
       
-      {/* File List */}
-      {uploadedFiles.length > 0 && (
-        <div className="flex flex-col gap-1">
-          {uploadedFiles.map((file, index) => (
-            <div key={index} className="flex items-center gap-1 text-xs font-orbitron">
-              {file.status === 'success' && (
-                <FaCheckCircle className="text-neon-green text-sm" />
-              )}
-              {file.status === 'error' && (
-                <FaExclamationCircle className="text-red-400 text-sm" />
-              )}
-              {file.status === 'uploading' && (
-                <div className="w-3 h-3 border-2 border-neon-pink border-t-transparent rounded-full animate-spin" />
-              )}
-              <span className={`truncate max-w-[120px] ${
-                file.status === 'success' ? 'text-neon-green' : 
-                file.status === 'error' ? 'text-red-400' : 'text-neon-pink'
-              }`}>
-                {file.name}
-              </span>
-              {file.status === 'success' && (
-                <button
-                  onClick={() => removeFile(file.name)}
-                  className="ml-1 text-neon-pink hover:text-red-500 text-xs"
-                  title="Remove file"
-                >
-                  <FaTimes />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Status Messages */}
       {uploadStatus === 'error' && errorMsg && (
         <span className="flex items-center gap-1 text-red-400 text-xs font-orbitron">
           <FaExclamationCircle className="text-sm" />
           {errorMsg}
         </span>
-      )}
-
-      {/* Clear All Button */}
-      {hasFiles && (
-        <button
-          onClick={handleClearFiles}
-          className="text-neon-pink hover:text-red-500 text-xs font-orbitron"
-          title="Clear all files"
-        >
-          Clear All
-        </button>
       )}
 
       {/* RAG Toggle */}
