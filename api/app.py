@@ -83,6 +83,7 @@ async def chat(request: ChatRequest):
         # If RAG is enabled and we have a vector database, use it
         if request.use_rag and vector_db and pdf_chunks:
             print(f"RAG enabled - Vector DB: {vector_db is not None}, Chunks: {len(pdf_chunks) if pdf_chunks else 0}")
+            print(f"User question: {request.message}")
             # Search for relevant chunks
             relevant_chunks = vector_db.search_by_text(request.message, k=3, return_as_text=True)
             print(f"Found {len(relevant_chunks)} relevant chunks")
@@ -98,7 +99,7 @@ async def chat(request: ChatRequest):
                 print(f"Context length: {len(context)} characters")
                 print(f"Context preview: {context[:500]}...")
                 
-                system_content += f"\n\nUse the following context from the uploaded bootcamp materials to answer the user's question:\n\n{context}\n\nIf the context doesn't contain relevant information to answer the question, you can use your general knowledge about AI engineering and bootcamp concepts, but mention that the specific information wasn't found in the uploaded materials."
+                system_content += f"\n\nIMPORTANT: The user has uploaded bootcamp materials. You MUST use the following context from these uploaded materials to answer their question:\n\n{context}\n\nCRITICAL INSTRUCTIONS:\n- ALWAYS reference the uploaded materials when answering questions\n- If the user asks about concepts, assignments, or content that appears in the uploaded materials, use that information first\n- Only fall back to your general knowledge if the specific question is not addressed in the uploaded materials\n- When using information from the uploaded materials, mention that it comes from the uploaded bootcamp materials\n- Do NOT say you don't see uploaded files - the files are clearly uploaded and indexed"
             else:
                 print("No relevant chunks found for the query")
         else:
