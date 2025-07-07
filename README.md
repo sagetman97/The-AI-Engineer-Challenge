@@ -220,3 +220,190 @@ The application will be available at http://localhost:3000
   - FastAPI
   - Pydantic
   - uvicorn
+
+# AIMakerSpace AI Engineering Bootcamp Assistant
+
+A RAG-powered chatbot specifically designed for the AIMakerSpace AI Engineering Bootcamp. Upload your bootcamp materials (PDF, DOCX, TXT) and chat with an AI tutor that understands your course content.
+
+## 🚀 Features
+
+- **Multi-file Upload**: Support for PDF, DOCX, and TXT files
+- **RAG Integration**: Chat with your uploaded bootcamp materials
+- **Neon Aesthetic**: Retro cyberpunk UI design
+- **Real-time Chat**: Interactive AI tutoring experience
+- **File Management**: Toggle RAG inclusion and remove files
+
+## 🏗️ Architecture
+
+- **Frontend**: Next.js 14 with TypeScript and Tailwind CSS
+- **Backend**: FastAPI with Python 3.11
+- **AI**: OpenAI GPT-4.1-mini with embeddings
+- **Vector Database**: Custom implementation with cosine similarity
+- **File Processing**: PyPDF2, python-docx, and text processing
+
+## 📁 Project Structure
+
+```
+The-AI-Engineer-Challenge/
+├── frontend/                 # Next.js frontend
+│   ├── app/
+│   │   ├── components/       # React components
+│   │   └── chat/            # Chat page
+│   └── package.json
+├── api/                     # FastAPI backend
+│   └── app.py              # Main API file
+├── aimakerspace/           # Custom AI library
+│   ├── text_utils.py       # File processing
+│   ├── vectordatabase.py   # Vector search
+│   └── openai_utils/       # OpenAI integration
+├── requirements.txt        # Python dependencies
+├── pyproject.toml         # Python project config
+├── runtime.txt            # Python version for Render
+└── vercel.json           # Vercel deployment config
+```
+
+## 🚀 Deployment
+
+### Backend (Render)
+
+1. **Create a new Web Service** on Render
+2. **Connect your GitHub repository**
+3. **Configure the service:**
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn api.app:app --host 0.0.0.0 --port $PORT`
+   - **Python Version**: 3.11.8 (specified in runtime.txt)
+
+4. **Environment Variables:**
+   ```
+   OPENAI_API_KEY=your_openai_api_key_here
+   PYTHONPATH=.
+   ```
+
+5. **Dependencies** (automatically installed from requirements.txt):
+   - fastapi>=0.115.12
+   - uvicorn>=0.34.2
+   - openai
+   - pydantic>=2.11.4
+   - PyPDF2>=3.0.0
+   - python-docx>=1.1.0
+   - numpy>=1.24.0
+   - python-dotenv>=1.0.0
+   - python-multipart>=0.0.6
+
+### Frontend (Vercel)
+
+1. **Connect your GitHub repository** to Vercel
+2. **Configure the project:**
+   - **Framework Preset**: Next.js
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `.next`
+
+3. **Environment Variables:**
+   ```
+   NEXT_PUBLIC_API_BASE_URL=https://your-render-backend-url.onrender.com
+   ```
+
+4. **Dependencies** (automatically installed from package.json):
+   - next: ^14.2.29
+   - react: ^18.2.0
+   - axios: ^1.6.7
+   - react-icons: ^5.5.0
+   - react-markdown: ^8.0.7
+   - tailwindcss: ^3.4.17
+
+## 🛠️ Local Development
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- OpenAI API key
+
+### Backend Setup
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Start the backend server
+uvicorn api.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install Node.js dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+### Environment Variables (Local)
+Create `.env.local` in the frontend directory:
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+## 🔧 API Endpoints
+
+- `POST /api/chat` - Chat with the AI assistant
+- `POST /api/upload-files` - Upload and process files
+- `GET /api/files-status` - Get current file status
+- `DELETE /api/clear-files` - Clear all uploaded files
+- `GET /api/health` - Health check endpoint
+
+## 🎨 UI Features
+
+- **Neon Theme**: Pink and blue neon colors with glowing effects
+- **Responsive Design**: Works on desktop and mobile
+- **File Upload**: Drag-and-drop or click to upload
+- **RAG Toggle**: Enable/disable RAG for specific conversations
+- **Real-time Chat**: Live typing indicators and message status
+- **Code Highlighting**: Syntax highlighting for code blocks
+- **Emoji Reactions**: React to messages with emojis
+
+## 🔒 Security
+
+- CORS configured for specific domains
+- File type validation (PDF, DOCX, TXT only)
+- Environment variable protection
+- Input sanitization and validation
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **ModuleNotFoundError: No module named 'PyPDF2'**
+   - Ensure requirements.txt is properly installed
+   - Check Python version compatibility
+
+2. **CORS errors**
+   - Verify CORS origins in api/app.py
+   - Check environment variables
+
+3. **File upload failures**
+   - Ensure file types are supported
+   - Check file size limits
+   - Verify temporary file permissions
+
+### Render Deployment Issues
+
+1. **Build failures**
+   - Check Python version in runtime.txt
+   - Verify all dependencies in requirements.txt
+   - Ensure PYTHONPATH is set to "."
+
+2. **Runtime errors**
+   - Check environment variables
+   - Verify OpenAI API key is valid
+   - Check application logs in Render dashboard
+
+## 📝 License
+
+This project is part of the AIMakerSpace AI Engineering Bootcamp.
+
+## 🤝 Contributing
+
+This is a bootcamp project. For questions or issues, please refer to the bootcamp materials or contact your instructor.
