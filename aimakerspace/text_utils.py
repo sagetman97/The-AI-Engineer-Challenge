@@ -11,6 +11,11 @@ class TextFileLoader:
         self.encoding = encoding
 
     def load(self):
+        print(f"TextFileLoader.load() called for path: {self.path}")
+        print(f"Path ends with .txt: {self.path.endswith('.txt')}")
+        print(f"Is file: {os.path.isfile(self.path)}")
+        print(f"Is directory: {os.path.isdir(self.path)}")
+        
         if os.path.isdir(self.path):
             self.load_directory()
         elif os.path.isfile(self.path) and self.path.endswith(".txt"):
@@ -242,6 +247,7 @@ class MultiFileLoader:
     def load_file(self, file_path: str, filename: str):
         """Load a single file based on its extension"""
         file_extension = filename.lower().split('.')[-1]
+        print(f"Processing file: {filename} (extension: {file_extension}) at path: {file_path}")
         
         if file_extension == 'pdf':
             loader = PDFLoader(file_path)
@@ -254,6 +260,7 @@ class MultiFileLoader:
         
         # Load the document
         docs = loader.load_documents()
+        print(f"Loaded {len(docs)} documents from {filename}")
         
         # Add to our collection with file info
         for doc in docs:

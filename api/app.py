@@ -82,13 +82,19 @@ async def chat(request: ChatRequest):
         
         # If RAG is enabled and we have a vector database, use it
         if request.use_rag and vector_db and pdf_chunks:
+            print(f"RAG enabled - Vector DB: {vector_db is not None}, Chunks: {len(pdf_chunks) if pdf_chunks else 0}")
             # Search for relevant chunks
             relevant_chunks = vector_db.search_by_text(request.message, k=3, return_as_text=True)
+            print(f"Found {len(relevant_chunks)} relevant chunks")
             
             if relevant_chunks:
                 # Add context to system message
                 context = "\n\n".join(relevant_chunks)
                 system_content += f"\n\nUse the following context from the uploaded bootcamp materials to answer the user's question:\n\n{context}\n\nIf the context doesn't contain relevant information to answer the question, you can use your general knowledge about AI engineering and bootcamp concepts, but mention that the specific information wasn't found in the uploaded materials."
+            else:
+                print("No relevant chunks found for the query")
+        else:
+            print(f"RAG not enabled or no data - RAG: {request.use_rag}, Vector DB: {vector_db is not None}, Chunks: {len(pdf_chunks) if pdf_chunks else 0}")
         
         # Create a chat completion request
         response = client.chat.completions.create(
@@ -158,18 +164,29 @@ async def upload_files(files: List[UploadFile] = File(...)):
             documents = multi_loader.load_documents()
             file_info = multi_loader.get_file_info()
             
+            print(f"Extracted {len(documents)} documents from {len(file_info)} files")
+            for i, (doc, file) in enumerate(zip(documents, file_info)):
+                print(f"Document {i+1} from {file}: {len(doc)} characters")
+                if len(doc) > 0:
+                    print(f"  Preview: {doc[:200]}...")
+                else:
+                    print(f"  WARNING: Empty document from {file}")
+            
             if not documents:
                 raise HTTPException(status_code=400, detail="Could not extract text from any files")
             
             # Split text into chunks
             splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             new_chunks = splitter.split_texts(documents)
+            print(f"Created {len(new_chunks)} chunks from {len(documents)} documents")
             
             # Combine with existing chunks if any
             if pdf_chunks:
                 pdf_chunks.extend(new_chunks)
+                print(f"Added {len(new_chunks)} new chunks to existing {len(pdf_chunks) - len(new_chunks)} chunks")
             else:
                 pdf_chunks = new_chunks
+                print(f"Created new chunk list with {len(pdf_chunks)} chunks")
             
             # Rebuild vector database with all chunks (including existing ones)
             embedding_model = EmbeddingModel()
