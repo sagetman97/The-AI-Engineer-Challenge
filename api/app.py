@@ -16,12 +16,12 @@ from pathlib import Path
 # Import aimakerspace components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from aimakerspace.text_utils import PDFLoader, CharacterTextSplitter
+from aimakerspace.text_utils import MultiFileLoader, CharacterTextSplitter
 from aimakerspace.vectordatabase import VectorDatabase
 from aimakerspace.openai_utils.embedding import EmbeddingModel
 
 # Initialize FastAPI application with a title
-app = FastAPI(title="OpenAI Chat API")
+app = FastAPI(title="AIMakerSpace Bootcamp Assistant")
 
 # Configure CORS (Cross-Origin Resource Sharing) middleware
 # This allows the API to be accessed from different domains/origins
@@ -44,7 +44,7 @@ app.add_middleware(
 # Global variables for RAG system
 vector_db = None
 pdf_chunks = []
-pdf_filename = None
+uploaded_files = []  # Track uploaded files
 
 # Define the data model for chat requests using Pydantic
 class ChatRequest(BaseModel):
@@ -60,22 +60,24 @@ async def chat(request: ChatRequest):
             raise HTTPException(status_code=500, detail="OpenAI API key not set in environment variables.")
         client = OpenAI(api_key=OPENAI_API_KEY)
         
-        # Prepare system message
+        # Prepare system message for AIMakerSpace Bootcamp Assistant
         system_content = (
-            "You are a helpful AI assistant with a retro neon aesthetic. Keep your responses concise, engaging, "
-            "and clearly formatted using markdown.\n\n"
+            "You are the AIMakerSpace AI Engineering Bootcamp Assistant, a helpful AI tutor with a retro neon aesthetic. "
+            "You help students understand bootcamp materials, assignments, and concepts.\n\n"
+            "Keep your responses concise, engaging, and clearly formatted using markdown.\n\n"
             "Respond appropriately to different types of prompts:\n"
-            "- **Concept explanations**: Use simple language, analogies, and avoid jargon. Speak as if explaining to a curious beginner.\n"
-            "- **Summarization tasks**: Extract only the key points. Avoid copying full sentences. Be concise and clear.\n"
-            "- **Creative writing**: Use vivid but coherent storytelling. Stay within length limits and include a clear beginning, middle, and end.\n"
-            "- **Logical or math questions**: Think step-by-step and explain your reasoning clearly. Provide only one final answer at the end.\n"
-            "- **Rewriting or tone-shifting**: Match the requested tone (e.g., formal, professional, casual). Eliminate slang or filler words when writing professionally.\n\n"
+            "- **Concept explanations**: Use simple language, analogies, and avoid jargon. Speak as if explaining to a bootcamp student.\n"
+            "- **Assignment help**: Provide guidance without giving complete answers. Help students understand the problem.\n"
+            "- **Code explanations**: Break down code step-by-step, explain concepts clearly.\n"
+            "- **Bootcamp questions**: Answer questions about course structure, deadlines, or requirements.\n"
+            "- **Technical questions**: Provide accurate, helpful explanations for AI/ML concepts.\n\n"
             "Use markdown for:\n"
             "- Bullet points\n"
             "- **Bold** and *italic* emphasis\n"
             "- Code blocks when sharing code\n"
             "- Line breaks for readability\n\n"
-            "You are accurate, imaginative, and adaptable — all while staying sharp and stylish like a neon-lit arcade genius."
+            "You are knowledgeable about AI engineering, machine learning, and the bootcamp curriculum. "
+            "Stay sharp and stylish like a neon-lit arcade genius while being an excellent tutor!"
         )
         
         # If RAG is enabled and we have a vector database, use it
@@ -86,7 +88,7 @@ async def chat(request: ChatRequest):
             if relevant_chunks:
                 # Add context to system message
                 context = "\n\n".join(relevant_chunks)
-                system_content += f"\n\nUse the following context from the uploaded PDF to answer the user's question:\n\n{context}\n\nIf the context doesn't contain relevant information to answer the question, you can use your general knowledge, but mention that the specific information wasn't found in the uploaded document."
+                system_content += f"\n\nUse the following context from the uploaded bootcamp materials to answer the user's question:\n\n{context}\n\nIf the context doesn't contain relevant information to answer the question, you can use your general knowledge about AI engineering and bootcamp concepts, but mention that the specific information wasn't found in the uploaded materials."
         
         # Create a chat completion request
         response = client.chat.completions.create(
@@ -110,28 +112,49 @@ async def chat(request: ChatRequest):
         # Handle any errors that occur during processing
         raise HTTPException(status_code=500, detail=str(e))
 
-# PDF upload endpoint
-@app.post("/api/upload-pdf")
-async def upload_pdf(file: UploadFile = File(...)):
-    global vector_db, pdf_chunks, pdf_filename
+# Multi-file upload endpoint
+@app.post("/api/upload-files")
+async def upload_files(files: List[UploadFile] = File(...)):
+    global vector_db, pdf_chunks, uploaded_files
     
     try:
-        # Validate file type
-        if not file.filename.lower().endswith('.pdf'):
-            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+        if not files:
+            raise HTTPException(status_code=400, detail="No files provided")
         
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
-            temp_path = temp_file.name
+        # Validate file types
+        allowed_extensions = {'.pdf', '.docx', '.txt'}
+        for file in files:
+            file_ext = Path(file.filename).suffix.lower()
+            if file_ext not in allowed_extensions:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"File type {file_ext} not supported. Allowed: {', '.join(allowed_extensions)}"
+                )
+        
+        # Initialize multi-file loader
+        multi_loader = MultiFileLoader()
+        temp_files = []
         
         try:
-            # Load and process PDF
-            pdf_loader = PDFLoader(temp_path)
-            documents = pdf_loader.load_documents()
+            # Process each file
+            for file in files:
+                # Create temporary file
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix)
+                temp_files.append(temp_file.name)
+                
+                # Write file content
+                shutil.copyfileobj(file.file, temp_file)
+                temp_file.close()
+                
+                # Load the file
+                multi_loader.load_file(temp_file.name, file.filename)
+            
+            # Get all documents and file info
+            documents = multi_loader.load_documents()
+            file_info = multi_loader.get_file_info()
             
             if not documents:
-                raise HTTPException(status_code=400, detail="Could not extract text from PDF")
+                raise HTTPException(status_code=400, detail="Could not extract text from any files")
             
             # Split text into chunks
             splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
@@ -142,38 +165,43 @@ async def upload_pdf(file: UploadFile = File(...)):
             vector_db = VectorDatabase(embedding_model)
             await vector_db.abuild_from_list(pdf_chunks)
             
-            pdf_filename = file.filename
+            # Update uploaded files list
+            uploaded_files = list(set(file_info))  # Remove duplicates
             
             return {
-                "message": f"PDF '{file.filename}' uploaded and indexed successfully! Found {len(pdf_chunks)} text chunks.",
-                "filename": file.filename,
+                "message": f"Successfully uploaded and indexed {len(uploaded_files)} files! Found {len(pdf_chunks)} text chunks.",
+                "files": uploaded_files,
                 "chunks_count": len(pdf_chunks)
             }
             
         finally:
-            # Clean up temporary file
-            os.unlink(temp_path)
+            # Clean up temporary files
+            for temp_file in temp_files:
+                try:
+                    os.unlink(temp_file)
+                except:
+                    pass
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing files: {str(e)}")
 
-# Get current PDF status
-@app.get("/api/pdf-status")
-async def get_pdf_status():
+# Get current files status
+@app.get("/api/files-status")
+async def get_files_status():
     return {
-        "has_pdf": vector_db is not None,
-        "filename": pdf_filename,
+        "has_files": vector_db is not None,
+        "files": uploaded_files,
         "chunks_count": len(pdf_chunks) if pdf_chunks else 0
     }
 
-# Clear PDF data
-@app.delete("/api/clear-pdf")
-async def clear_pdf():
-    global vector_db, pdf_chunks, pdf_filename
+# Clear all files data
+@app.delete("/api/clear-files")
+async def clear_files():
+    global vector_db, pdf_chunks, uploaded_files
     vector_db = None
     pdf_chunks = []
-    pdf_filename = None
-    return {"message": "PDF data cleared successfully"}
+    uploaded_files = []
+    return {"message": "All files cleared successfully"}
 
 # Define a health check endpoint to verify API status
 @app.get("/api/health")

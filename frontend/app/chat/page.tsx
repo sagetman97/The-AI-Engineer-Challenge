@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import PDFUpload from '../components/PDFUpload';
+import FileUpload from '../components/PDFUpload';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -16,7 +16,6 @@ interface Message {
   content: string;
   timestamp: Date;
   status?: 'sending' | 'sent' | 'delivered' | 'error';
-  reactions?: { emoji: string; count: number }[];
 }
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '👏'];
@@ -32,7 +31,6 @@ const beep = () => {
   g.gain.value = 0.05;
   o.start();
   o.stop(ctx.currentTime + 0.1);
-  setTimeout(() => ctx.close(), 200);
 };
 
 const formatTime = (date: Date) => {
@@ -50,7 +48,7 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [hasPDF, setHasPDF] = useState(false);
+  const [hasFiles, setHasFiles] = useState(false);
   const [ragEnabled, setRagEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,13 +67,14 @@ export default function Chat() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const maxHeight = 6 * 24; // 6 lines * 24px line-height
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + 'px';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   }, [input]);
 
-  const handlePDFUploaded = (hasPDF: boolean) => {
-    setHasPDF(hasPDF);
-    if (!hasPDF) setRagEnabled(false);
+  const handleFilesUploaded = (hasFiles: boolean) => {
+    setHasFiles(hasFiles);
+    if (!hasFiles) setRagEnabled(false);
   };
 
   const handleRAGToggle = (rag: boolean) => {
@@ -101,7 +100,7 @@ export default function Chat() {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/chat`, {
         message: input,
-        use_rag: ragEnabled && hasPDF
+        use_rag: ragEnabled && hasFiles
       });
       
       // Update user message status
@@ -176,7 +175,7 @@ export default function Chat() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-[80vh] container mx-auto px-4 py-8 max-w-4xl">
+    <main className="min-h-screen bg-dark text-white p-4 font-orbitron">
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-4">
           <span className="block w-12 h-12 rounded-full bg-gradient-to-br from-neon-pink to-neon-blue shadow-neon animate-neon-pulse flex items-center justify-center">
@@ -185,18 +184,22 @@ export default function Chat() {
               <text x="16" y="22" textAnchor="middle" fontSize="16" fill="#ff00ff" fontFamily="Orbitron, sans-serif">🤖</text>
             </svg>
           </span>
-          <h1 className="text-5xl font-extrabold text-neon-blue animate-neon-pulse drop-shadow-neon">Retro Neon Chat</h1>
+          <h1 className="text-5xl font-extrabold text-neon-blue animate-neon-pulse drop-shadow-neon">AIMakerSpace Assistant</h1>
         </div>
+        <p className="text-neon-pink text-lg mt-2">Your AI Engineering Bootcamp Tutor</p>
       </div>
 
       <div className="w-full max-w-2xl bg-dark border-2 border-neon-pink rounded-lg shadow-neon p-4 mb-4 h-[50vh] overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-neon-blue">
-            <span className="text-6xl animate-neon-pulse">💭</span>
-            <p className="text-xl font-orbitron">Start a conversation!</p>
-            {hasPDF && (
-              <p className="text-sm text-gray-400 mt-2">
-                Attach a PDF and toggle RAG to chat with your document
+            <span className="text-6xl animate-neon-pulse">🎓</span>
+            <p className="text-xl font-orbitron">Welcome to AIMakerSpace!</p>
+            <p className="text-sm text-gray-400 mt-2 text-center">
+              Upload your bootcamp materials (PDF, DOCX, TXT) and ask me anything about assignments, concepts, or course content.
+            </p>
+            {hasFiles && (
+              <p className="text-sm text-neon-green mt-2">
+                Files loaded! Toggle RAG to chat with your materials.
               </p>
             )}
           </div>
@@ -215,7 +218,7 @@ export default function Chat() {
                 >
                   {message.role === 'assistant' && showAvatar && (
                     <div className="w-8 h-8 rounded-full bg-neon-blue flex items-center justify-center mr-2 shadow-neon-blue">
-                      <span className="text-lg">🤖</span>
+                      <span className="text-lg">🎓</span>
                     </div>
                   )}
                   <div className="flex flex-col max-w-[80%] group">
@@ -238,21 +241,27 @@ export default function Chat() {
                                     style={vscDarkPlus}
                                     language={match ? match[1] : undefined}
                                     PreTag="div"
-                                    customStyle={{
-                                      borderRadius: '0.5rem',
-                                      margin: '0.5rem 0',
-                                      fontSize: '1em',
-                                      lineHeight: '1.6',
-                                      background: '#18181b',
-                                      padding: '1em',
-                                    }}
-                                    wrapLongLines={true}
+                                    {...props}
                                   >
                                     {String(children).replace(/\n$/, '')}
                                   </SyntaxHighlighter>
                                 ) : (
-                                  <code className="bg-dark text-neon-pink px-1 rounded" {...props}>{children}</code>
+                                  <code className="bg-gray-800 px-1 py-0.5 rounded text-neon-green" {...props}>
+                                    {children}
+                                  </code>
                                 );
+                              },
+                              h1({children, ...props}: any) {
+                                return <h1 className="text-2xl font-bold text-neon-pink mb-4" {...props}>{children}</h1>;
+                              },
+                              h2({children, ...props}: any) {
+                                return <h2 className="text-xl font-bold text-neon-blue mb-3" {...props}>{children}</h2>;
+                              },
+                              h3({children, ...props}: any) {
+                                return <h3 className="text-lg font-bold text-neon-green mb-2" {...props}>{children}</h3>;
+                              },
+                              blockquote({children, ...props}: any) {
+                                return <blockquote className="border-l-4 border-neon-pink pl-4 italic text-gray-300" {...props}>{children}</blockquote>;
                               },
                               strong({children, ...props}: any) {
                                 return <strong className="font-bold text-neon-pink" {...props}>{children}</strong>;
@@ -299,44 +308,22 @@ export default function Chat() {
                         {message.reactions.map((reaction, i) => (
                           <span
                             key={i}
-                            className="text-xs bg-dark px-2 py-1 rounded-full border border-neon-blue"
+                            className="bg-dark border border-neon-pink px-2 py-1 rounded-full text-xs"
                           >
                             {reaction.emoji} {reaction.count}
                           </span>
                         ))}
                       </div>
                     )}
-                    <span className={`text-xs text-neon-blue mt-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                      {formatTime(message.timestamp)}
-                    </span>
                   </div>
-                  {message.role === 'user' && showAvatar && (
-                    <div className="w-8 h-8 rounded-full bg-neon-pink flex items-center justify-center ml-2 shadow-neon-pink">
-                      <span className="text-lg">👤</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
-            {isTyping && (
-              <div className="flex justify-start items-center mt-4">
-                <div className="w-8 h-8 rounded-full bg-neon-blue flex items-center justify-center mr-2 shadow-neon-blue">
-                  <span className="text-lg">🤖</span>
-                </div>
-                <div className="bg-neon-blue text-dark p-4 rounded-lg shadow-neon-blue font-orbitron">
-                  <div className="flex space-x-2">
-                    <span className="animate-bounce">●</span>
-                    <span className="animate-bounce delay-100">●</span>
-                    <span className="animate-bounce delay-200">●</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
+      {/* Reaction Picker Modal */}
       {showReactionPicker !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-dark p-4 rounded-lg border-2 border-neon-pink shadow-neon">
@@ -355,32 +342,38 @@ export default function Chat() {
         </div>
       )}
 
-      {/* Chat input area with PDF upload icon and RAG toggle */}
+      {/* Chat input area with file upload and RAG toggle */}
       <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-2">
         <div className="flex gap-2 items-end">
-          <PDFUpload
-            onPDFUploaded={handlePDFUploaded}
+          <FileUpload
+            onFilesUploaded={handleFilesUploaded}
             onRAGToggle={handleRAGToggle}
-            hasPDF={hasPDF}
+            hasFiles={hasFiles}
             ragEnabled={ragEnabled}
           />
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={hasPDF ? "Ask about your PDF or chat normally..." : "Type your message..."}
-            className="neon-input flex-grow font-orbitron resize-none min-h-[40px] max-h-[144px] overflow-y-auto"
-            disabled={isLoading}
-            rows={1}
-            style={{ lineHeight: '24px' }}
-          />
+          <div className="flex-1 relative">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask me about your bootcamp materials..."
+              className="w-full bg-dark border-2 border-neon-blue rounded-lg p-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-neon-pink transition-colors"
+              rows={1}
+              disabled={isLoading}
+            />
+            {isTyping && (
+              <div className="absolute bottom-2 right-2 text-neon-pink animate-pulse">
+                <span className="text-sm">AI is typing...</span>
+              </div>
+            )}
+          </div>
           <button
             type="submit"
-            className="neon-button whitespace-nowrap w-36 text-lg font-orbitron"
-            disabled={isLoading}
+            disabled={isLoading || !input.trim()}
+            className="bg-neon-pink text-dark px-6 py-3 rounded-lg font-orbitron hover:bg-neon-pink/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-neon"
           >
-            {isLoading ? 'Sending...' : 'Send'}
+            Send
           </button>
         </div>
       </form>

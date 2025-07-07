@@ -1,6 +1,7 @@
 import os
 from typing import List
 import PyPDF2
+from docx import Document
 
 
 class TextFileLoader:
@@ -119,6 +120,86 @@ class PDFLoader:
     def load_documents(self):
         self.load()
         return self.documents
+
+
+class DOCXLoader:
+    def __init__(self, path: str):
+        self.documents = []
+        self.path = path
+        print(f"DOCXLoader initialized with path: {self.path}")
+
+    def load(self):
+        print(f"Loading DOCX from path: {self.path}")
+        print(f"Path exists: {os.path.exists(self.path)}")
+        print(f"Is file: {os.path.isfile(self.path)}")
+        
+        try:
+            # Try to open the file first to verify access
+            with open(self.path, 'rb') as test_file:
+                pass
+            
+            # If we can open it, proceed with loading
+            self.load_file()
+            
+        except IOError as e:
+            raise ValueError(f"Cannot access file at '{self.path}': {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Error processing file at '{self.path}': {str(e)}")
+
+    def load_file(self):
+        doc = Document(self.path)
+        
+        # Extract text from paragraphs
+        text = ""
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+        
+        # Extract text from tables
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    text += cell.text + "\n"
+        
+        self.documents.append(text)
+
+    def load_documents(self):
+        self.load()
+        return self.documents
+
+
+class MultiFileLoader:
+    """Loader that can handle multiple file types (PDF, DOCX, TXT)"""
+    
+    def __init__(self):
+        self.documents = []
+        self.file_info = []  # Track which file each document came from
+    
+    def load_file(self, file_path: str, filename: str):
+        """Load a single file based on its extension"""
+        file_extension = filename.lower().split('.')[-1]
+        
+        if file_extension == 'pdf':
+            loader = PDFLoader(file_path)
+        elif file_extension == 'docx':
+            loader = DOCXLoader(file_path)
+        elif file_extension == 'txt':
+            loader = TextFileLoader(file_path)
+        else:
+            raise ValueError(f"Unsupported file type: {file_extension}")
+        
+        # Load the document
+        docs = loader.load_documents()
+        
+        # Add to our collection with file info
+        for doc in docs:
+            self.documents.append(doc)
+            self.file_info.append(filename)
+    
+    def load_documents(self):
+        return self.documents
+    
+    def get_file_info(self):
+        return self.file_info
 
 
 if __name__ == "__main__":
