@@ -264,53 +264,47 @@ The-AI-Engineer-Challenge/
 
 ## 🚀 Deployment
 
-### Backend (Render)
+### **Render (Backend)**
+1. **Connect your GitHub repository** to Render
+2. **Create a new Web Service**
+3. **Build Command**: `pip install -r requirements.txt`
+4. **Start Command**: `uvicorn api.app:app --host 0.0.0.0 --port $PORT`
+5. **Environment Variables**:
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `PYTHONPATH`: `.`
+6. **Python Version**: 3.11.8 (specified in `runtime.txt`)
 
-1. **Create a new Web Service** on Render
-2. **Connect your GitHub repository**
-3. **Configure the service:**
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn api.app:app --host 0.0.0.0 --port $PORT`
-   - **Python Version**: 3.11.8 (specified in runtime.txt)
-
-4. **Environment Variables:**
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   PYTHONPATH=.
-   ```
-
-5. **Dependencies** (automatically installed from requirements.txt):
-   - fastapi>=0.115.12
-   - uvicorn>=0.34.2
-   - openai
-   - pydantic>=2.11.4
-   - PyPDF2>=3.0.0
-   - python-docx>=1.1.0
-   - numpy>=1.24.0
-   - python-dotenv>=1.0.0
-   - python-multipart>=0.0.6
-
-### Frontend (Vercel)
-
+### **Vercel (Frontend)**
 1. **Connect your GitHub repository** to Vercel
-2. **Configure the project:**
-   - **Framework Preset**: Next.js
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `.next`
+2. **Framework Preset**: Next.js
+3. **Root Directory**: `frontend`
+4. **Build Command**: `npm run build`
+5. **Output Directory**: `.next`
+6. **Environment Variables**:
+   - `NEXT_PUBLIC_API_BASE_URL`: Your Render backend URL
 
-3. **Environment Variables:**
-   ```
-   NEXT_PUBLIC_API_BASE_URL=https://your-render-backend-url.onrender.com
-   ```
+### **Dependencies**
 
-4. **Dependencies** (automatically installed from package.json):
-   - next: ^14.2.29
-   - react: ^18.2.0
-   - axios: ^1.6.7
-   - react-icons: ^5.5.0
-   - react-markdown: ^8.0.7
-   - tailwindcss: ^3.4.17
+#### **Backend Dependencies** (`requirements.txt`)
+- `fastapi>=0.115.12` - Web framework
+- `uvicorn>=0.34.2` - ASGI server
+- `openai>=1.0.0` - OpenAI API client
+- `pydantic>=2.11.4` - Data validation
+- `PyPDF2>=3.0.0` - PDF processing
+- `python-docx>=1.1.0` - DOCX processing
+- `numpy>=1.24.0` - Numerical computing
+- `python-dotenv>=1.0.0` - Environment variables
+- `python-multipart>=0.0.6` - File uploads
+- `aiofiles>=23.0.0` - Async file operations
+
+#### **Frontend Dependencies** (`frontend/package.json`)
+- `next>=14.2.29` - React framework
+- `react>=18.2.0` - UI library
+- `axios>=1.6.7` - HTTP client
+- `react-markdown>=8.0.7` - Markdown rendering
+- `react-syntax-highlighter>=15.6.1` - Code highlighting
+- `react-icons>=5.5.0` - Icon library
+- `tailwindcss>=3.4.17` - CSS framework
 
 ## 🛠️ Local Development
 
