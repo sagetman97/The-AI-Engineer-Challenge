@@ -138,8 +138,11 @@ async def upload_files(files: List[UploadFile] = File(...)):
         temp_files = []
         
         try:
-            # Process each file
+            # Process each new file
             for file in files:
+                if not file.filename:
+                    continue  # Skip files without names
+                    
                 # Create temporary file
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix)
                 temp_files.append(temp_file.name)
@@ -160,18 +163,29 @@ async def upload_files(files: List[UploadFile] = File(...)):
             
             # Split text into chunks
             splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-            pdf_chunks = splitter.split_texts(documents)
+            new_chunks = splitter.split_texts(documents)
             
-            # Initialize vector database and build embeddings
+            # Combine with existing chunks if any
+            if pdf_chunks:
+                pdf_chunks.extend(new_chunks)
+            else:
+                pdf_chunks = new_chunks
+            
+            # Rebuild vector database with all chunks (including existing ones)
             embedding_model = EmbeddingModel()
             vector_db = VectorDatabase(embedding_model)
             await vector_db.abuild_from_list(pdf_chunks)
             
-            # Update uploaded files list
-            uploaded_files = list(set(file_info))  # Remove duplicates
+            # Update uploaded files list - add new files to existing ones
+            new_files = list(set(file_info))  # Remove duplicates
+            if uploaded_files:
+                uploaded_files.extend(new_files)
+                uploaded_files = list(set(uploaded_files))  # Remove duplicates
+            else:
+                uploaded_files = new_files
             
             return {
-                "message": f"Successfully uploaded and indexed {len(uploaded_files)} files! Found {len(pdf_chunks)} text chunks.",
+                "message": f"Successfully uploaded and indexed {len(new_files)} new files! Total files: {len(uploaded_files)}, Total chunks: {len(pdf_chunks)}.",
                 "files": uploaded_files,
                 "chunks_count": len(pdf_chunks)
             }

@@ -21,17 +21,65 @@ class TextFileLoader:
             )
 
     def load_file(self):
-        with open(self.path, "r", encoding=self.encoding) as f:
-            self.documents.append(f.read())
+        # Try multiple encodings to handle problematic files
+        encodings_to_try = ['utf-8', 'utf-16', 'utf-16-le', 'utf-16-be', 'latin-1', 'cp1252']
+        
+        for encoding in encodings_to_try:
+            try:
+                with open(self.path, "r", encoding=encoding) as f:
+                    content = f.read()
+                    # Clean up any problematic characters
+                    content = content.encode('utf-8', errors='ignore').decode('utf-8')
+                    self.documents.append(content)
+                    return
+            except UnicodeDecodeError:
+                continue
+            except Exception as e:
+                print(f"Error reading file with {encoding} encoding: {e}")
+                continue
+        
+        # If all encodings fail, try binary mode and decode with errors='ignore'
+        try:
+            with open(self.path, "rb") as f:
+                content = f.read().decode('utf-8', errors='ignore')
+                self.documents.append(content)
+        except Exception as e:
+            raise ValueError(f"Could not read file {self.path} with any encoding: {e}")
 
     def load_directory(self):
         for root, _, files in os.walk(self.path):
             for file in files:
                 if file.endswith(".txt"):
-                    with open(
-                        os.path.join(root, file), "r", encoding=self.encoding
-                    ) as f:
-                        self.documents.append(f.read())
+                    try:
+                        file_path = os.path.join(root, file)
+                        # Try multiple encodings for each file
+                        encodings_to_try = ['utf-8', 'utf-16', 'utf-16-le', 'utf-16-be', 'latin-1', 'cp1252']
+                        
+                        for encoding in encodings_to_try:
+                            try:
+                                with open(file_path, "r", encoding=encoding) as f:
+                                    content = f.read()
+                                    # Clean up any problematic characters
+                                    content = content.encode('utf-8', errors='ignore').decode('utf-8')
+                                    self.documents.append(content)
+                                    break
+                            except UnicodeDecodeError:
+                                continue
+                            except Exception as e:
+                                print(f"Error reading {file_path} with {encoding} encoding: {e}")
+                                continue
+                        else:
+                            # If all encodings fail, try binary mode
+                            try:
+                                with open(file_path, "rb") as f:
+                                    content = f.read().decode('utf-8', errors='ignore')
+                                    self.documents.append(content)
+                            except Exception as e:
+                                print(f"Could not read {file_path}: {e}")
+                                continue
+                    except Exception as e:
+                        print(f"Error processing {file}: {e}")
+                        continue
 
     def load_documents(self):
         self.load()
@@ -91,16 +139,33 @@ class PDFLoader:
             raise ValueError(f"Error processing file at '{self.path}': {str(e)}")
 
     def load_file(self):
-        with open(self.path, 'rb') as file:
-            # Create PDF reader object
-            pdf_reader = PyPDF2.PdfReader(file)
-            
-            # Extract text from each page
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-            
-            self.documents.append(text)
+        try:
+            with open(self.path, 'rb') as file:
+                # Create PDF reader object
+                pdf_reader = PyPDF2.PdfReader(file)
+                
+                # Extract text from each page
+                text = ""
+                for page in pdf_reader.pages:
+                    try:
+                        page_text = page.extract_text()
+                        if page_text:
+                            # Clean up any problematic characters
+                            page_text = page_text.encode('utf-8', errors='ignore').decode('utf-8')
+                            text += page_text + "\n"
+                    except Exception as e:
+                        print(f"Error extracting text from PDF page: {e}")
+                        continue
+                
+                if text.strip():
+                    self.documents.append(text)
+                else:
+                    print(f"Warning: No text extracted from PDF {self.path}")
+                    self.documents.append("")  # Add empty string to maintain structure
+        except Exception as e:
+            print(f"Error processing PDF {self.path}: {e}")
+            # Add empty string to maintain structure even if PDF fails
+            self.documents.append("")
 
     def load_directory(self):
         for root, _, files in os.walk(self.path):

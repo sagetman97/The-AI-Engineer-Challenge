@@ -11,6 +11,7 @@ interface FileUploadProps {
   onRAGToggle: (rag: boolean) => void;
   hasFiles: boolean;
   ragEnabled: boolean;
+  existingFiles?: UploadedFile[];
 }
 
 export interface UploadedFile {
@@ -20,7 +21,7 @@ export interface UploadedFile {
   includedInRAG?: boolean;
 }
 
-export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, ragEnabled }: FileUploadProps) {
+export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, ragEnabled, existingFiles = [] }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error' | 'uploading'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -49,12 +50,15 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
     setUploadStatus('uploading');
     setErrorMsg(null);
 
-    // Initialize files with uploading status
-    const initialFiles: UploadedFile[] = files.map(file => ({
+    // Initialize new files with uploading status
+    const newFiles: UploadedFile[] = files.map(file => ({
       name: file.name,
       status: 'uploading',
       includedInRAG: true // Default to included
     }));
+
+    // Combine existing files with new files
+    const allFiles = [...existingFiles, ...newFiles];
 
     try {
       const formData = new FormData();
@@ -69,19 +73,21 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
       setUploadStatus('success');
       setErrorMsg(null);
       
-      // Update files with success status
-      const successFiles: UploadedFile[] = files.map(file => ({
+      // Update new files with success status
+      const updatedNewFiles: UploadedFile[] = files.map(file => ({
         name: file.name,
         status: 'success',
         includedInRAG: true
       }));
 
-      onFilesUploaded(true, successFiles);
+      // Combine existing files with updated new files
+      const finalFiles = [...existingFiles, ...updatedNewFiles];
+      onFilesUploaded(true, finalFiles);
     } catch (error: any) {
       setUploadStatus('error');
       setErrorMsg(error.response?.data?.detail || 'Upload failed');
       
-      // Update files with error status
+      // Update new files with error status
       const errorFiles: UploadedFile[] = files.map(file => ({
         name: file.name,
         status: 'error',
@@ -89,7 +95,9 @@ export default function FileUpload({ onFilesUploaded, onRAGToggle, hasFiles, rag
         includedInRAG: false
       }));
 
-      onFilesUploaded(false, errorFiles);
+      // Combine existing files with error files
+      const finalFiles = [...existingFiles, ...errorFiles];
+      onFilesUploaded(existingFiles.length > 0, finalFiles);
     }
   };
 

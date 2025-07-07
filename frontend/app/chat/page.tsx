@@ -347,13 +347,6 @@ export default function Chat() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* File Manager - appears below chat when files are uploaded */}
-          <FileManager
-            files={uploadedFiles}
-            onFilesChange={handleFilesChange}
-            onClearAll={handleClearAll}
-          />
-
           {/* Chat input area with file upload and RAG toggle */}
           <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-2">
             <div className="flex gap-2 items-end">
@@ -362,6 +355,7 @@ export default function Chat() {
                 onRAGToggle={handleRAGToggle}
                 hasFiles={hasFiles}
                 ragEnabled={ragEnabled}
+                existingFiles={uploadedFiles}
               />
               <div className="flex-1 relative">
                 <textarea
@@ -389,6 +383,13 @@ export default function Chat() {
               </button>
             </div>
           </form>
+
+          {/* File Manager - appears below chat input when files are uploaded */}
+          <FileManager
+            files={uploadedFiles}
+            onFilesChange={handleFilesChange}
+            onClearAll={handleClearAll}
+          />
         </div>
       </div>
 
