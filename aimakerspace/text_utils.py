@@ -199,6 +199,7 @@ class MultiFileLoader:
         return self.documents
     
     def get_file_info(self):
+        """Return the list of filenames that were processed"""
         return self.file_info
 
 

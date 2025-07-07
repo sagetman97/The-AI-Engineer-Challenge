@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import axios from 'axios';
 import { FaFileUpload, FaExclamationCircle } from 'react-icons/fa';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 interface FileUploadProps {
   onFilesUploaded: (hasFiles: boolean, files: UploadedFile[]) => void;

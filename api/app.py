@@ -124,6 +124,8 @@ async def upload_files(files: List[UploadFile] = File(...)):
         # Validate file types
         allowed_extensions = {'.pdf', '.docx', '.txt'}
         for file in files:
+            if not file.filename:
+                raise HTTPException(status_code=400, detail="File must have a filename")
             file_ext = Path(file.filename).suffix.lower()
             if file_ext not in allowed_extensions:
                 raise HTTPException(
