@@ -88,8 +88,16 @@ async def chat(request: ChatRequest):
             print(f"Found {len(relevant_chunks)} relevant chunks")
             
             if relevant_chunks:
+                # Debug: Print the actual chunks being used
+                print("Relevant chunks content:")
+                for i, chunk in enumerate(relevant_chunks):
+                    print(f"Chunk {i+1}: {chunk[:200]}...")
+                
                 # Add context to system message
                 context = "\n\n".join(relevant_chunks)
+                print(f"Context length: {len(context)} characters")
+                print(f"Context preview: {context[:500]}...")
+                
                 system_content += f"\n\nUse the following context from the uploaded bootcamp materials to answer the user's question:\n\n{context}\n\nIf the context doesn't contain relevant information to answer the question, you can use your general knowledge about AI engineering and bootcamp concepts, but mention that the specific information wasn't found in the uploaded materials."
             else:
                 print("No relevant chunks found for the query")

@@ -42,7 +42,16 @@ class VectorDatabase:
     ) -> List[str] | List[Tuple[str, float]]:
         query_vector = self.embedding_model.get_embedding(query_text)
         results = self.search(query_vector, k, distance_measure)
-        return [result[0] for result in results] if return_as_text else results
+        print(f"VectorDB search results: {len(results)} items")
+        for i, (key, score) in enumerate(results):
+            print(f"  Result {i+1}: Score {score:.4f}, Key preview: {key[:100]}...")
+        
+        if return_as_text:
+            text_results = [result[0] for result in results]
+            print(f"Returning {len(text_results)} text chunks")
+            return text_results
+        else:
+            return results
 
     def retrieve_from_key(self, key: str) -> np.array:
         return self.vectors.get(key, None)
