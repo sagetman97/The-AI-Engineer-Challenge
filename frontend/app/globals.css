@@ -74,4 +74,53 @@ body { background: #0a0a0a !important; }
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.property,
 :where(.react-syntax-highlighter-line, .react-syntax-highlighter) .token.number {
   color: #b026ff !important;
-} 
+}
+
+/* --- Neon Readable Code & Highlight Fixes --- */
+code, pre, .code-block, .hljs, .markdown code, .markdown pre {
+  background: #181825 !important;   /* Deep dark blue for contrast */
+  color: #00fff7 !important;        /* Neon cyan for retro look */
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  font-size: 1em;
+  overflow-x: auto;
+}
+
+/* For inline code specifically */
+.markdown code:not(pre code), code:not(pre code) {
+  background: #181825 !important;
+  color: #00fff7 !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* For code blocks */
+pre code, .markdown pre code {
+  background: #181825 !important;
+  color: #00fff7 !important;
+  display: block;
+  padding: 1em;
+  white-space: pre-wrap;
+  border-radius: 6px;
+}
+
+/* Fix for syntax highlighter themes that use black or blue text */
+.hljs-keyword, .hljs-string, .hljs-title, .hljs-literal, .hljs-comment, .hljs-variable {
+  color: #00fff7 !important;
+}
+
+/* Prevent black/redacted backgrounds */
+.hljs, .highlight, .code-block {
+  background: #181825 !important;
+}
+
+/* Ensure high contrast for highlighted/marked text */
+mark, .highlighted, .token.marked {
+  background: #ff00ff !important; /* Neon pink highlight */
+  color: #fff !important;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* --- End Neon Readable Code & Highlight Fixes --- */ 
